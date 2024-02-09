@@ -5,12 +5,14 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Profile from "./pages/Profile";
 import ForgotPassword from "./pages/ForgotPassword";
+import Header from './components/Header'; 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <>
+    <div>
     <Router>
+      <Header />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
@@ -20,7 +22,7 @@ function App() {
         <Route path="/offers" element={<Offers />} />
       </Routes>
     </Router>
-  </>
+  </div>
   );
 }
 
