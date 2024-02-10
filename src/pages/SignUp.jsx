@@ -3,8 +3,13 @@ import { useState } from 'react'
 import { IoIosEyeOff, IoIosEye } from "react-icons/io";
 import { Link } from 'react-router-dom';
 import OAuth from '../components/OAuth';
+import {createUserWithEmailAndPassword, getAuth, updateProfile } from 'firebase/auth';
+import {db} from '../firebase';
+import { serverTimestamp, setDoc, doc} from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import {toast} from 'react-toastify';
 
- const SignUp = () => {
+export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormatData] = useState({
     name: "",
@@ -12,14 +17,42 @@ import OAuth from '../components/OAuth';
     password: "",
   })
   const {name, email, password} = formData;
-
-  function onChange(event) {
+  const navigate = useNavigate();
+  
+  function onChange(e) {
     setFormatData((prevState)=>({
       ...prevState,
-      [event.target.id]: event.target.value,
-    }))
+      [e.target.id]: e.target.value,
+    }));
   }
 
+  async function onSubmit(e) {
+    e.preventDefault();
+
+    try {
+      const auth = getAuth();
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        email, 
+        password
+        );
+
+      updateProfile(auth.currentUser, {
+        displayName: name,
+      });
+
+      const user = userCredential.user;
+      const formDataCopy = {...formData} 
+      delete formDataCopy.password;
+      formDataCopy.timestamp = serverTimestamp();
+
+      await setDoc(doc(db, "users", user.uid), formDataCopy)
+      // navigate("/");
+      // toast.success("Sign-up was successful");
+    } catch(error) {
+      toast.error("Something went wrong with the registration")
+    }
+  } 
   return (
     <section>
       <h1 className='text-3xl text-center mt-6 font-bold'>Sign Up</h1>
@@ -28,7 +61,7 @@ import OAuth from '../components/OAuth';
           <img src="https://images.unsplash.com/flagged/photo-1564767609342-620cb19b2357?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8a2V5fGVufDB8fDB8fHww" alt='key-image' className="w-full rounded-2xl" />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form>
+          <form onSubmit={onSubmit}>
           <input className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out mb-6" type="text" id="name" value={name} onChange={onChange} placeholder='Full Name' />
             <input className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out mb-6" type="email" id="email" value={email} onChange={onChange} placeholder='Email address' />
             <div className='relative mb-6'>
@@ -37,7 +70,7 @@ import OAuth from '../components/OAuth';
             </div>
             <div className='flex justify-between whitespace-nowrap text-sm sm:text-lg'>
               <p className="mb-6">Have an account?
-                <Link to="/sign-in" className="text-red-600 hover:text-red-700 transition duration-200 ease-in-out  ml-1">Sign In</Link>
+                <Link to="/sign-in" className="text-red-600 hover:text-red-700 transition duration-200 ease-in-out  ml-1">Sign Up</Link>
               </p>
               <Link to="/forgot-password" className='text-blue-600 hover:text-red-800 transition duration-200 ease-in-out'>Forgot Password?</Link>
             </div>
@@ -52,5 +85,3 @@ import OAuth from '../components/OAuth';
     </section>
   )
 }
-
-export default SignUp;
