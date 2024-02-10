@@ -1,8 +1,10 @@
 import React from 'react'
 import { useState } from 'react'
 import { IoIosEyeOff, IoIosEye } from "react-icons/io";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import OAuth from '../components/OAuth';
+import { signInWithEmailAndPassword, getAuth } from 'firebase/auth';
+import {toast} from 'react-toastify';
 
  const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -11,12 +13,25 @@ import OAuth from '../components/OAuth';
     password: "",
   })
   const {email, password} = formData;
-
+  const navigate = useNavigate();
   function onChange(event) {
     setFormatData((prevState)=>({
       ...prevState,
       [event.target.id]: event.target.value,
     }))
+  }
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    try {
+      const auth = getAuth() 
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      if(userCredential.user) {
+        navigate("/");
+      }
+    } catch (error) {
+      toast.error("Bad user credentials");
+    }
   }
 
   return (
@@ -27,7 +42,7 @@ import OAuth from '../components/OAuth';
           <img src="https://images.unsplash.com/flagged/photo-1564767609342-620cb19b2357?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8a2V5fGVufDB8fDB8fHww" alt='key-image' className="w-full rounded-2xl" />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form>
+          <form onSubmit={onSubmit}>
             <input className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out mb-6" type="email" id="email" value={email} onChange={onChange} placeholder='Email address' />
             <div className='relative mb-6'>
               <input className="w-full px-4 py-2 text-xl text-gray-700 bg-white border-gray-300 rounded transition ease-in-out  " type={showPassword ? "text" : "password"} id="password" value={password} onChange={onChange} placeholder='Password' />
@@ -39,7 +54,7 @@ import OAuth from '../components/OAuth';
               </p>
               <Link to="/forgot-password" className='text-blue-600 hover:text-red-800 transition duration-200 ease-in-out'>Forgot Password?</Link>
             </div>
-            <button type="submit" className='w-full bg-blue-600 text-white px-7 py-3 text-sm font-medium uppercase rounded shadow-md hover:bg-blue-700 transition duration-150 ease-in-out hover:shadow-lg active:bg-blue-800'>Sign Up</button>
+            <button type="submit" className='w-full bg-blue-600 text-white px-7 py-3 text-sm font-medium uppercase rounded shadow-md hover:bg-blue-700 transition duration-150 ease-in-out hover:shadow-lg active:bg-blue-800'>Sign In</button>
             <div className="flex items-center my-4 before:border-t before:flex-1  before:border-gray-300 after:border-t after:flex-1  after:border-gray-300">
             <p className="text-center font-semibold mx-4">OR</p>
           </div>
